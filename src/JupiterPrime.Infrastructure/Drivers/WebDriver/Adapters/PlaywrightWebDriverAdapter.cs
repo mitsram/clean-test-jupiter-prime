@@ -10,10 +10,12 @@ namespace JupiterPrime.Infrastructure.Drivers.WebDriver.Adapters;
 public class PlaywrightWebDriverAdapter : IWebDriverAdapter
 {
     private readonly IPage _page;
+    private readonly int _defaultTimeoutMs;
 
     public PlaywrightWebDriverAdapter(IPage page)
     {
         _page = page ?? throw new ArgumentNullException(nameof(page));
+        _defaultTimeoutMs = 30 * 5000;
     }
 
     public void NavigateToUrl(string url) => _page.GotoAsync(url).GetAwaiter().GetResult();
@@ -50,11 +52,55 @@ public class PlaywrightWebDriverAdapter : IWebDriverAdapter
     public void Dispose() => _page.CloseAsync().GetAwaiter().GetResult();
 
     public async ValueTask DisposeAsync() => await _page.CloseAsync();
+
+    public IWebElementAdapter FindElementByDataLocator(string dataLocator)
+    {
+        return new PlaywrightWebElementAdapter(_page.Locator($"[data-locator='{dataLocator}']"));
+    }
+
+    public IWebElementAdapter FindElementByDataLocator(IWebElementAdapter parentElement, string dataLocator)
+    {
+        var playwrightElement = (parentElement as PlaywrightWebElementAdapter)._element;
+        return new PlaywrightWebElementAdapter(playwrightElement.Locator($"[data-locator='{dataLocator}']"));
+    }
+
+    public IReadOnlyCollection<IWebElementAdapter> FindElementsByTestId(string testId) 
+    {
+        var locator = _page.GetByTestId(testId);
+        locator.First.WaitForAsync(new LocatorWaitForOptions 
+        {
+            State = WaitForSelectorState.Visible,
+            Timeout = _defaultTimeoutMs
+        }).GetAwaiter().GetResult();
+
+        return locator.AllAsync().GetAwaiter().GetResult()
+            .Select(e => new PlaywrightWebElementAdapter(e))
+            .ToList();
+    }
+        
+
+    // public IReadOnlyCollection<IWebElementAdapter> FindElementsByTestId(string testId) =>
+    //     _page.GetByTestId(testId).AllAsync().GetAwaiter().GetResult()
+    //         .Select(e => new PlaywrightWebElementAdapter(e))
+    //         .ToList();
+
+    public IWebElementAdapter FindElementByTestId(IWebElementAdapter parentElement, string testId)
+    {
+        var playwrightElement = (parentElement as PlaywrightWebElementAdapter)._element;
+        return new PlaywrightWebElementAdapter(playwrightElement.Locator($"[data-testid='{testId}']"));
+    }
+
+    public IReadOnlyCollection<IWebElementAdapter> FindElementsByDataLocator(string dataLocator)
+    {
+        return _page.Locator($"[data-locator='{dataLocator}']").AllAsync().GetAwaiter().GetResult()
+            .Select(e => new PlaywrightWebElementAdapter(e))
+            .ToList();
+    }
 }
 
 public class PlaywrightWebElementAdapter : IWebElementAdapter
 {
-    private readonly ILocator _element;
+    internal readonly ILocator _element;
 
     public PlaywrightWebElementAdapter(ILocator element)
     {
@@ -68,7 +114,7 @@ public class PlaywrightWebElementAdapter : IWebElementAdapter
 
 public class PlaywrightElementHandleAdapter : IWebElementAdapter
 {
-    private readonly IElementHandle _element;
+    internal readonly IElementHandle _element;
 
     public PlaywrightElementHandleAdapter(IElementHandle element)
     {

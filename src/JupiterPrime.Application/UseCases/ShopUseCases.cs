@@ -27,7 +27,9 @@ public class ShopUseCases : IDisposable
 
     public void AddItemToCart(string itemName)
     {
+        Console.WriteLine("---> Use Cases");
         _shopService.AddItemToCart(itemName);
+        
     }
 
     public void RemoveItemFromCart(string itemName)

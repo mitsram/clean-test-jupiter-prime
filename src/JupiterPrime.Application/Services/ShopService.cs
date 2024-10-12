@@ -23,9 +23,21 @@ namespace JupiterPrime.Application.Services
         }
 
         public void AddItemToCart(string itemName)
-        {
-            var addToCartButton = _driver.FindElementByXPath($"//div[contains(@class, 'inventory_item_name') and text()='{itemName}']/ancestor::div[contains(@class, 'inventory_item')]//button[text()='Add to cart']");
-            addToCartButton.Click();
+        {            
+            NavigateToShopPage();            
+            var productElements = _driver.FindElementsByTestId("product");            
+            Console.WriteLine("---> Service Start " + productElements.Count);
+            foreach (var productElement in productElements)
+            {
+                var nameElement = _driver.FindElementByDataLocator(productElement, "product-title");                
+                if (nameElement.Text == itemName.Trim())
+                {
+                    var addToCartButton = _driver.FindElementByDataLocator(productElement, "add-to-cart-button");
+                    addToCartButton.Click();
+                    return;
+                }
+            }
+            throw new Exception($"Product '{itemName}' not found.");
         }
 
         public void RemoveItemFromCart(string itemName)
@@ -50,7 +62,7 @@ namespace JupiterPrime.Application.Services
 
         public void NavigateToCartPage()
         {
-            var cartLink = _driver.FindElementByClassName("shopping_cart_link");
+            var cartLink = _driver.FindElementById("menu-cart");
             cartLink.Click();
         }
 

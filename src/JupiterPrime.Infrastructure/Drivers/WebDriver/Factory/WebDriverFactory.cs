@@ -38,7 +38,7 @@ public class WebDriverFactory : IWebDriverFactory, IAsyncDisposable
     private IWebDriverAdapter CreateSeleniumWebDriver()
     {
         var options = new ChromeOptions();
-        options.AddArgument("--headless");
+        // options.AddArgument("--headless");
         var driver = new ChromeDriver(options);
         return new SeleniumWebDriverAdapter(driver);
     }
