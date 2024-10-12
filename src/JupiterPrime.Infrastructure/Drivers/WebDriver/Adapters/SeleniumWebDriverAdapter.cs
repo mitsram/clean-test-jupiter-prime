@@ -20,6 +20,9 @@ public class SeleniumWebDriverAdapter : IWebDriverAdapter
     public IWebElementAdapter FindElementById(string id) => 
         new SeleniumWebElementAdapter(_driver.FindElement(By.Id(id)));
 
+    public IWebElementAdapter FindElementByTestId(string testId) =>
+        new SeleniumWebElementAdapter(_driver.FindElement(By.CssSelector($"[data-testid=\"{testId}\"]")));
+
     public IWebElementAdapter FindElementByXPath(string xpath) =>
         new SeleniumWebElementAdapter(_driver.FindElement(By.XPath(xpath)));
 

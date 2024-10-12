@@ -9,6 +9,7 @@ public interface IWebDriverAdapter : IDisposable, IAsyncDisposable
 {
     void NavigateToUrl(string url);
     IWebElementAdapter FindElementById(string id);
+    IWebElementAdapter FindElementByTestId(string testId);
     IWebElementAdapter FindElementByXPath(string xpath);
     IWebElementAdapter FindElementByClassName(string className);
     IReadOnlyCollection<IWebElementAdapter> FindElementsByCssSelector(string cssSelector);

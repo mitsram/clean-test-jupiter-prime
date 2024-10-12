@@ -9,7 +9,7 @@ namespace JupiterPrime.Tests
 {
     public abstract class BaseTest : IAsyncDisposable
     {
-        private WebDriverFactory _webDriverFactory;
+        protected WebDriverFactory webDriverFactory;
         protected TestConfiguration TestConfig { get; private set; }
 
         [OneTimeSetUp]
@@ -25,9 +25,9 @@ namespace JupiterPrime.Tests
         }
 
         [SetUp]
-        public virtual void Setup()
+        public virtual async Task SetupAsync()
         {
-            _webDriverFactory = new WebDriverFactory(TestConfig.WebDriverType);            
+            webDriverFactory = new WebDriverFactory(TestConfig.WebDriverType);            
         }
 
         [TearDown]
@@ -38,9 +38,9 @@ namespace JupiterPrime.Tests
 
         public async ValueTask DisposeAsync()
         {
-            if (_webDriverFactory != null)
+            if (webDriverFactory != null)
             {
-                await _webDriverFactory.DisposeAsync();
+                await webDriverFactory.DisposeAsync();
             }
         }
     }

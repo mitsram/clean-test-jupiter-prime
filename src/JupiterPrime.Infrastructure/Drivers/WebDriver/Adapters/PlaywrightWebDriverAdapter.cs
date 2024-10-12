@@ -21,8 +21,8 @@ public class PlaywrightWebDriverAdapter : IWebDriverAdapter
     public IWebElementAdapter FindElementById(string id) => 
         new PlaywrightWebElementAdapter(_page.Locator($"#{id}"));
 
-    // public IWebElementAdapter FindElementByTestId(string testId) =>
-    //     new PlaywrightWebElementAdapter(_page.Locator($"[data-testid=\"{testId}\"]"));
+    public IWebElementAdapter FindElementByTestId(string testId) =>
+        new PlaywrightWebElementAdapter(_page.GetByTestId(testId));
 
     public IWebElementAdapter FindElementByXPath(string xpath) =>
         new PlaywrightWebElementAdapter(_page.Locator(xpath));
