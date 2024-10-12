@@ -5,14 +5,14 @@ using JupiterPrime.Application.Strategies;
 
 namespace JupiterPrime.Application.Interfaces;
 
-public interface IWebDriverAdapter : IAsyncDisposable
+public interface IWebDriverAdapter : IDisposable, IAsyncDisposable
 {
-    Task NavigateToUrl(string url);
-    StrategyElement FindElementById(string id);
-    StrategyElement FindElementByXPath(string xpath);
-    StrategyElement FindElementByClassName(string className);
-    Task<IReadOnlyCollection<StrategyElement>> FindElementsByCssSelector(string cssSelector);
-    Task<IReadOnlyCollection<StrategyElement>> FindElementsByXPath(string xpath);
-    Task<IReadOnlyCollection<StrategyElement>> FindElementsByClassName(string className);
+    void NavigateToUrl(string url);
+    IWebElementAdapter FindElementById(string id);
+    IWebElementAdapter FindElementByXPath(string xpath);
+    IWebElementAdapter FindElementByClassName(string className);
+    IReadOnlyCollection<IWebElementAdapter> FindElementsByCssSelector(string cssSelector);
+    IReadOnlyCollection<IWebElementAdapter> FindElementsByXPath(string xpath);
+    IReadOnlyCollection<IWebElementAdapter> FindElementsByClassName(string className);
     string GetCurrentUrl();
 }

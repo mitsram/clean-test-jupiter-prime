@@ -4,7 +4,7 @@ namespace JupiterPrime.Application.Interfaces;
 
 public interface IWebElementAdapter
 {
-    Task SendKeys(string text);
-    Task Click();
-    Task<string> GetText();
+    void SendKeys(string text);
+    void Click();
+    string Text { get; }
 }

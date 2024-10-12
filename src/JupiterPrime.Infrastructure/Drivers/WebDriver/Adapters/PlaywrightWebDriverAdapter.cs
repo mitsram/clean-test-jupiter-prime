@@ -1,63 +1,55 @@
 using Microsoft.Playwright;
 using JupiterPrime.Application.Interfaces;
-using JupiterPrime.Application.Strategies;
 using System;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace JupiterPrime.Infrastructure.Drivers.WebDriver.Adapters;
 
-public class PlaywrightWebDriverAdapter : IWebDriverAdapter, IAsyncDisposable
+public class PlaywrightWebDriverAdapter : IWebDriverAdapter
 {
     private readonly IPage _page;
-    private bool _disposed = false;
 
     public PlaywrightWebDriverAdapter(IPage page)
     {
         _page = page ?? throw new ArgumentNullException(nameof(page));
     }
 
-    public async Task NavigateToUrl(string url) => await _page.GotoAsync(url);
+    public void NavigateToUrl(string url) => _page.GotoAsync(url).GetAwaiter().GetResult();
 
-    public StrategyElement FindElementById(string id) => 
-        new StrategyElement(new PlaywrightWebElementAdapter(_page.Locator($"#{id}")));
+    public IWebElementAdapter FindElementById(string id) => 
+        new PlaywrightWebElementAdapter(_page.Locator($"#{id}"));
 
-    public StrategyElement FindElementByXPath(string xpath) =>
-        new StrategyElement(new PlaywrightWebElementAdapter(_page.Locator(xpath)));
+    // public IWebElementAdapter FindElementByTestId(string testId) =>
+    //     new PlaywrightWebElementAdapter(_page.Locator($"[data-testid=\"{testId}\"]"));
 
-    public StrategyElement FindElementByClassName(string className) =>
-        new StrategyElement(new PlaywrightWebElementAdapter(_page.Locator($".{className}")));
+    public IWebElementAdapter FindElementByXPath(string xpath) =>
+        new PlaywrightWebElementAdapter(_page.Locator(xpath));
 
-    public async Task<IReadOnlyCollection<StrategyElement>> FindElementsByCssSelector(string cssSelector)
-    {
-        var elements = await _page.QuerySelectorAllAsync(cssSelector);
-        return elements.Select(e => new StrategyElement(new PlaywrightElementHandleAdapter(e))).ToList();
-    }
+    public IWebElementAdapter FindElementByClassName(string className) =>
+        new PlaywrightWebElementAdapter(_page.Locator($".{className}"));
 
-    public async Task<IReadOnlyCollection<StrategyElement>> FindElementsByXPath(string xpath)
-    {
-        var elements = await _page.QuerySelectorAllAsync(xpath);
-        return elements.Select(e => new StrategyElement(new PlaywrightElementHandleAdapter(e))).ToList();
-    }
+    public IReadOnlyCollection<IWebElementAdapter> FindElementsByCssSelector(string cssSelector) =>
+        _page.QuerySelectorAllAsync(cssSelector).GetAwaiter().GetResult()
+            .Select(e => new PlaywrightElementHandleAdapter(e))
+            .ToList();
 
-    public async Task<IReadOnlyCollection<StrategyElement>> FindElementsByClassName(string className)
-    {
-        var elements = await _page.QuerySelectorAllAsync($".{className}");
-        return elements.Select(e => new StrategyElement(new PlaywrightElementHandleAdapter(e))).ToList();
-    }
+    public IReadOnlyCollection<IWebElementAdapter> FindElementsByXPath(string xpath) =>
+        _page.QuerySelectorAllAsync(xpath).GetAwaiter().GetResult()
+            .Select(e => new PlaywrightElementHandleAdapter(e))
+            .ToList();
+
+    public IReadOnlyCollection<IWebElementAdapter> FindElementsByClassName(string className) =>
+        _page.QuerySelectorAllAsync($".{className}").GetAwaiter().GetResult()
+            .Select(e => new PlaywrightElementHandleAdapter(e))
+            .ToList();
 
     public string GetCurrentUrl() => _page.Url;
 
-    public async ValueTask DisposeAsync()
-    {
-        if (!_disposed)
-        {
-            await _page.CloseAsync();
-            _disposed = true;
-        }
-        GC.SuppressFinalize(this);
-    }
+    public void Dispose() => _page.CloseAsync().GetAwaiter().GetResult();
+
+    public async ValueTask DisposeAsync() => await _page.CloseAsync();
 }
 
 public class PlaywrightWebElementAdapter : IWebElementAdapter
@@ -69,9 +61,9 @@ public class PlaywrightWebElementAdapter : IWebElementAdapter
         _element = element ?? throw new ArgumentNullException(nameof(element));
     }
 
-    public async Task SendKeys(string text) => await _element.FillAsync(text);
-    public async Task Click() => await _element.ClickAsync();
-    public async Task<string> GetText() => await _element.TextContentAsync();
+    public void SendKeys(string text) => _element.FillAsync(text).GetAwaiter().GetResult();
+    public void Click() => _element.ClickAsync().GetAwaiter().GetResult();
+    public string Text => _element.TextContentAsync().GetAwaiter().GetResult();
 }
 
 public class PlaywrightElementHandleAdapter : IWebElementAdapter
@@ -83,7 +75,7 @@ public class PlaywrightElementHandleAdapter : IWebElementAdapter
         _element = element ?? throw new ArgumentNullException(nameof(element));
     }
 
-    public async Task SendKeys(string text) => await _element.FillAsync(text);
-    public async Task Click() => await _element.ClickAsync();
-    public async Task<string> GetText() => await _element.TextContentAsync();
+    public void SendKeys(string text) => _element.FillAsync(text).GetAwaiter().GetResult();
+    public void Click() => _element.ClickAsync().GetAwaiter().GetResult();
+    public string Text => _element.TextContentAsync().GetAwaiter().GetResult();
 }

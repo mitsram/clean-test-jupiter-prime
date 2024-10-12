@@ -6,73 +6,73 @@ using OpenQA.Selenium.Chrome;
 using System;
 using System.Threading.Tasks;
 
-namespace JupiterPrime.Infrastructure.WebDriver
+namespace JupiterPrime.Infrastructure.Drivers.WebDriver;
+
+public class WebDriverFactory : IWebDriverFactory, IAsyncDisposable
 {
-    public class WebDriverFactory : IWebDriverFactory, IAsyncDisposable
+    private readonly WebDriverType driverType;
+    private IWebDriverAdapter driverAdapter;
+    private IPlaywright playwright;
+    private IBrowser browser;
+
+    public WebDriverFactory(WebDriverType webDriverType)
     {
-        private readonly WebDriverType _webDriverType;
-        private IWebDriverAdapter _currentDriver;
-        private IPlaywright _playwright;
-        private IBrowser _browser;
+        driverType = webDriverType;
+    }
 
-        public WebDriverFactory(WebDriverType webDriverType)
+    public async Task<IWebDriverAdapter> CreateWebDriver()
+    {
+        switch (driverType)
         {
-            _webDriverType = webDriverType;
-        }
-
-        public async Task<IWebDriverAdapter> CreateWebDriver()
-        {
-            switch (_webDriverType)
-            {
-                case WebDriverType.Selenium:
-                    _currentDriver = CreateSeleniumWebDriver();
-                    return _currentDriver;
-                case WebDriverType.Playwright:
-                    _currentDriver = await CreatePlaywrightWebDriver();
-                    return _currentDriver;
-                default:
-                    throw new ArgumentException("Invalid WebDriver type");
-            }
-        }
-
-        private IWebDriverAdapter CreateSeleniumWebDriver()
-        {
-            var options = new ChromeOptions();
-            options.AddArgument("--headless");
-            var driver = new ChromeDriver(options);
-            return new SeleniumWebDriverAdapter(driver);
-        }
-
-        private async Task<IWebDriverAdapter> CreatePlaywrightWebDriver()
-        {
-            _playwright = await Playwright.CreateAsync();
-            _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
-            {
-                Headless = false
-            });
-            var page = await _browser.NewPageAsync();
-            return new PlaywrightWebDriverAdapter(page);
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            if (_currentDriver != null)
-            {
-                await _currentDriver.DisposeAsync();
-            }
-
-            if (_browser != null)
-            {
-                await _browser.DisposeAsync();
-            }
-
-            _playwright?.Dispose();
+            case WebDriverType.Selenium:
+                driverAdapter = CreateSeleniumWebDriver();
+                return driverAdapter;
+            case WebDriverType.Playwright:
+                driverAdapter = await CreatePlaywrightWebDriver();
+                return driverAdapter;
+            default:
+                throw new ArgumentException("Invalid WebDriver type");
         }
     }
 
-    public enum WebDriverType
+    private IWebDriverAdapter CreateSeleniumWebDriver()
     {
-        Selenium,
-        Playwright
+        var options = new ChromeOptions();
+        options.AddArgument("--headless");
+        var driver = new ChromeDriver(options);
+        return new SeleniumWebDriverAdapter(driver);
+    }
+
+    private async Task<IWebDriverAdapter> CreatePlaywrightWebDriver()
+    {
+        playwright = await Playwright.CreateAsync();
+        browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Headless = false
+        });
+        var page = await browser.NewPageAsync();
+        return new PlaywrightWebDriverAdapter(page);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (driverAdapter != null)
+        {
+            await driverAdapter.DisposeAsync();
+        }
+
+        if (browser != null)
+        {
+            await browser.DisposeAsync();
+        }
+
+        playwright?.Dispose();
     }
 }
+
+public enum WebDriverType
+{
+    Selenium,
+    Playwright
+}
+
