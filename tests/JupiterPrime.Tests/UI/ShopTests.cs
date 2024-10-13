@@ -69,6 +69,37 @@ namespace JupiterPrime.Tests
         }
 
         [Test]        
+        public void NavigateToCartPage_ShouldDisplayCorrectItems()
+        {
+            shop.NavigateToShopPage();
+            shop.AddItemToCart("Shrek");
+            shop.AddItemToCart("puppy");
+
+            shop.NavigateToCartPage();
+
+            Assert.That(driver.GetCurrentUrl(), Does.Contain("/cart"), "URL should contain '/cart'");
+            Assert.That(shop.IsItemInCart("Shrek"), Is.True, "Shrek should be in the cart");
+            Assert.That(shop.IsItemInCart("puppy"), Is.True, "puppy should be in the cart");
+        }
+
+        [Test]
+        [Ignore("This is how you skip a test")]
+        public void AddMultipleItemsToCart_ShouldUpdateCartCorrectly()
+        {
+            shop.NavigateToShopPage();
+
+            shop.AddItemToCart("Shrek");
+            shop.AddItemToCart("puppy");
+            shop.AddItemToCart("Panda");
+
+            Assert.That(shop.GetCartItemCount(), Is.EqualTo(3), "Cart should contain 3 items");
+            Assert.That(shop.IsItemInCart("Shrek"), Is.True, "Shrek should be in the cart");
+            Assert.That(shop.IsItemInCart("puppy"), Is.True, "puppy should be in the cart");
+            Assert.That(shop.IsItemInCart("Panda"), Is.True, "Panda should be in the cart");
+        }        
+
+        [Test]
+        [Ignore("This is how you skip a test")]        
         public void GetItemPrice_ShouldReturnCorrectPrice()
         {
             shop.NavigateToShopPage();
@@ -79,7 +110,7 @@ namespace JupiterPrime.Tests
         }
 
         [Test]
-        [Ignore("This is how you skip a test")]
+        [Ignore("Ignored as not available in the UI")]
         public void SortItemsByPriceHighToLow_ShouldSortCorrectly()
         {
             shop.NavigateToShopPage();
@@ -92,7 +123,7 @@ namespace JupiterPrime.Tests
         }
 
         [Test]
-        [Ignore("This is how you skip a test")]
+        [Ignore("Ignored as not available in the UI")]
         public void SortItemsByPriceLowToHigh_ShouldSortCorrectly()
         {
             shop.NavigateToShopPage();
@@ -105,7 +136,7 @@ namespace JupiterPrime.Tests
         }
 
         [Test]
-        [Ignore("This is how you skip a test")]
+        [Ignore("Ignored as not available in the UI")]
         public void SortItemsByNameAToZ_ShouldSortCorrectly()
         {
             shop.NavigateToShopPage();
@@ -118,7 +149,7 @@ namespace JupiterPrime.Tests
         }
 
         [Test]
-        [Ignore("This is how you skip a test")]
+        [Ignore("Ignored as not available in the UI")]
         public void SortItemsByNameZToA_ShouldSortCorrectly()
         {
             shop.NavigateToShopPage();
@@ -128,37 +159,6 @@ namespace JupiterPrime.Tests
 
             Assert.That(sortedItems.First(), Is.EqualTo("Jupiter T-Shirt"), "Jupiter T-Shirt should be first in reverse alphabetical order");
             Assert.That(sortedItems.Last(), Is.EqualTo("Jupiter Adventure Pants"), "Jupiter Adventure Pants should be last in reverse alphabetical order");
-        }
-
-        [Test]
-        [Ignore("This is how you skip a test")]
-        public void AddMultipleItemsToCart_ShouldUpdateCartCorrectly()
-        {
-            shop.NavigateToShopPage();
-
-            shop.AddItemToCart("Jupiter Pilot Jacket");
-            shop.AddItemToCart("Jupiter Adventure Pants");
-            shop.AddItemToCart("Jupiter T-Shirt");
-
-            Assert.That(shop.GetCartItemCount(), Is.EqualTo(3), "Cart should contain 3 items");
-            Assert.That(shop.IsItemInCart("Jupiter Pilot Jacket"), Is.True, "Jupiter Pilot Jacket should be in the cart");
-            Assert.That(shop.IsItemInCart("Jupiter Adventure Pants"), Is.True, "Jupiter Adventure Pants should be in the cart");
-            Assert.That(shop.IsItemInCart("Jupiter T-Shirt"), Is.True, "Jupiter T-Shirt should be in the cart");
-        }
-
-        [Test]
-        [Ignore("This is how you skip a test")]
-        public void NavigateToCartPage_ShouldDisplayCorrectItems()
-        {
-            shop.NavigateToShopPage();
-            shop.AddItemToCart("Jupiter Pilot Jacket");
-            shop.AddItemToCart("Jupiter Adventure Pants");
-
-            shop.NavigateToCartPage();
-
-            Assert.That(driver.GetCurrentUrl(), Does.Contain("/cart"), "URL should contain '/cart'");
-            Assert.That(shop.IsItemInCart("Jupiter Pilot Jacket"), Is.True, "Jupiter Pilot Jacket should be in the cart");
-            Assert.That(shop.IsItemInCart("Jupiter Adventure Pants"), Is.True, "Jupiter Adventure Pants should be in the cart");
-        }
+        }        
     }
 }
