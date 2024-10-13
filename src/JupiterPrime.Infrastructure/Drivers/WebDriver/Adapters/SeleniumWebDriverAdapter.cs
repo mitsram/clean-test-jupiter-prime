@@ -3,7 +3,6 @@ using OpenQA.Selenium.Support.UI;
 using JupiterPrime.Application.Interfaces;
 using System;
 using System.Threading.Tasks;
-using SeleniumElement = OpenQA.Selenium.IWebElement;
 using System.Collections.Generic;
 using System.Linq;
 using SeleniumExtras;
@@ -21,40 +20,43 @@ public class SeleniumWebDriverAdapter : IWebDriverAdapter
         _defaultTimeoutMs = 30 * 5000;
     }
 
+    public string GetCurrentUrl() => _driver.Url;
+
     public void NavigateToUrl(string url) => _driver.Navigate().GoToUrl(url);
 
     public IWebElementAdapter FindElementById(string id) => 
         new SeleniumWebElementAdapter(_driver.FindElement(By.Id(id)));
 
-    public IWebElementAdapter FindElementByTestId(string testId) =>
-        new SeleniumWebElementAdapter(_driver.FindElement(By.CssSelector($"[data-testid=\"{testId}\"]")));    
-
     public IWebElementAdapter FindElementByClassName(string className) =>
-        new SeleniumWebElementAdapter(_driver.FindElement(By.ClassName(className)));
+        new SeleniumWebElementAdapter(_driver.FindElement(By.ClassName(className)));    
 
-    public IReadOnlyCollection<IWebElementAdapter> FindElementsByCssSelector(string cssSelector) =>
-        _driver.FindElements(By.CssSelector(cssSelector))
-            .Select(e => new SeleniumWebElementAdapter(e))
-            .ToList();
-
-    public IReadOnlyCollection<IWebElementAdapter> FindElementsByXPath(string xpath) =>
-        _driver.FindElements(By.XPath(xpath))
-            .Select(e => new SeleniumWebElementAdapter(e))
-            .ToList();
-
-    public IReadOnlyCollection<IWebElementAdapter> FindElementsByClassName(string className) =>
-        _driver.FindElements(By.ClassName(className))
-            .Select(e => new SeleniumWebElementAdapter(e))
-            .ToList();
-
-    public string GetCurrentUrl() => _driver.Url;
-
-    public void Dispose() => _driver.Quit();
-
-    public ValueTask DisposeAsync()
+    public IWebElementAdapter FindElementByTestId(string testId) =>
+        new SeleniumWebElementAdapter(_driver.FindElement(By.CssSelector($"[data-testid=\"{testId}\"]")));
+    
+    public IWebElementAdapter FindElementByTestId(IWebElementAdapter parentElement, string testId)
     {
-        Dispose();
-        return ValueTask.CompletedTask;
+        var seleniumElement = (parentElement as SeleniumWebElementAdapter)._element;
+        return new SeleniumWebElementAdapter(seleniumElement.FindElement(By.CssSelector($"[data-testid='{testId}']")));
+    }
+
+    public IWebElementAdapter FindElementByXPath(string xpath) =>
+        new SeleniumWebElementAdapter(_driver.FindElement(By.XPath(xpath)));
+
+    public IWebElementAdapter FindElementByXPath(IWebElementAdapter parentElement, string xpath)
+    {
+        var seleniumElement = (parentElement as SeleniumWebElementAdapter)._element;
+        return new SeleniumWebElementAdapter(seleniumElement.FindElement(By.XPath(xpath)));
+    }
+
+    public IWebElementAdapter FindElementByTitle(string title)
+    {
+        return new SeleniumWebElementAdapter(_driver.FindElement(By.XPath($"//*[@title='{title}']")));
+    }
+
+    public IWebElementAdapter FindElementByTitle(IWebElementAdapter parentElement, string title)
+    {
+        var seleniumElement = (parentElement as SeleniumWebElementAdapter)._element;
+        return new SeleniumWebElementAdapter(seleniumElement.FindElement(By.XPath($".//*[@title='{title}']")));
     }
 
     public IWebElementAdapter FindElementByDataLocator(string dataLocator)
@@ -77,6 +79,16 @@ public class SeleniumWebDriverAdapter : IWebDriverAdapter
         }
     }
 
+    public IReadOnlyCollection<IWebElementAdapter> FindElementsByClassName(string className) =>
+        _driver.FindElements(By.ClassName(className))
+            .Select(e => new SeleniumWebElementAdapter(e))
+            .ToList();
+
+    public IReadOnlyCollection<IWebElementAdapter> FindElementsByCssSelector(string cssSelector) =>
+        _driver.FindElements(By.CssSelector(cssSelector))
+            .Select(e => new SeleniumWebElementAdapter(e))
+            .ToList();
+
     public IReadOnlyCollection<IWebElementAdapter> FindElementsByTestId(string testId)
     {
         var wait = new WebDriverWait(_driver, TimeSpan.FromMilliseconds(_defaultTimeoutMs));        
@@ -91,36 +103,17 @@ public class SeleniumWebDriverAdapter : IWebDriverAdapter
         return interactableElements.Select(e => new SeleniumWebElementAdapter(e, _driver)).ToList();
     }
 
-    private bool IsElementInteractable(IWebElement element)
-    {
-        try
-        {
-            return element.Displayed && element.Enabled && IsElementInViewport(element);
-        }
-        catch (StaleElementReferenceException)
-        {
-            return false;
-        }
-    }
+    public IReadOnlyCollection<IWebElementAdapter> FindElementsByXPath(string xpath) =>
+        _driver.FindElements(By.XPath(xpath))
+            .Select(e => new SeleniumWebElementAdapter(e))
+            .ToList();
 
-    private bool IsElementInViewport(IWebElement element)
-    {
-        var js = (IJavaScriptExecutor)_driver;
-        return (bool)js.ExecuteScript(@"
-            var rect = arguments[0].getBoundingClientRect();
-            return (
-                rect.top >= 0 &&
-                rect.left >= 0 &&
-                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-            );
-        ", element);
-    }
-
-    public IWebElementAdapter FindElementByTestId(IWebElementAdapter parentElement, string testId)
+    public IReadOnlyCollection<IWebElementAdapter> FindElementsByXPath(IWebElementAdapter parentElement, string xpath)
     {
         var seleniumElement = (parentElement as SeleniumWebElementAdapter)._element;
-        return new SeleniumWebElementAdapter(seleniumElement.FindElement(By.CssSelector($"[data-testid='{testId}']")));
+        return seleniumElement.FindElements(By.XPath(xpath))
+            .Select(e => new SeleniumWebElementAdapter(e))
+            .ToList();
     }
 
     public IReadOnlyCollection<IWebElementAdapter> FindElementsByDataLocator(string dataLocator)
@@ -129,6 +122,14 @@ public class SeleniumWebDriverAdapter : IWebDriverAdapter
             .Select(e => new SeleniumWebElementAdapter(e))
             .ToList();
     }
+
+    public IReadOnlyCollection<IWebElementAdapter> FindChildElements(IWebElementAdapter parentElement, string selector)
+    {
+        var seleniumElement = (parentElement as SeleniumWebElementAdapter)._element;
+        return seleniumElement.FindElements(By.CssSelector(selector))
+            .Select(e => new SeleniumWebElementAdapter(e))
+            .ToList();
+    }  
 
     public void WaitForTextToChange(IWebElementAdapter element, string oldText, int timeoutInSeconds = 10)
     {
@@ -149,43 +150,7 @@ public class SeleniumWebDriverAdapter : IWebDriverAdapter
                 return true; // Element is no longer in the DOM
             }
         });
-    }
-
-    public IWebElementAdapter FindElementByXPath(string xpath) =>
-        new SeleniumWebElementAdapter(_driver.FindElement(By.XPath(xpath)));
-
-    public IWebElementAdapter FindElementByXPath(IWebElementAdapter parentElement, string xpath)
-    {
-        var seleniumElement = (parentElement as SeleniumWebElementAdapter)._element;
-        return new SeleniumWebElementAdapter(seleniumElement.FindElement(By.XPath(xpath)));
-    }
-
-    public IReadOnlyCollection<IWebElementAdapter> FindElementsByXPath(IWebElementAdapter parentElement, string xpath)
-    {
-        var seleniumElement = (parentElement as SeleniumWebElementAdapter)._element;
-        return seleniumElement.FindElements(By.XPath(xpath))
-            .Select(e => new SeleniumWebElementAdapter(e))
-            .ToList();
-    }
-
-    public IWebElementAdapter FindElementByTitle(string title)
-    {
-        return new SeleniumWebElementAdapter(_driver.FindElement(By.XPath($"//*[@title='{title}']")));
-    }
-
-    public IWebElementAdapter FindElementByTitle(IWebElementAdapter parentElement, string title)
-    {
-        var seleniumElement = (parentElement as SeleniumWebElementAdapter)._element;
-        return new SeleniumWebElementAdapter(seleniumElement.FindElement(By.XPath($".//*[@title='{title}']")));
-    }
-
-    public IReadOnlyCollection<IWebElementAdapter> FindChildElements(IWebElementAdapter parentElement, string selector)
-    {
-        var seleniumElement = (parentElement as SeleniumWebElementAdapter)._element;
-        return seleniumElement.FindElements(By.CssSelector(selector))
-            .Select(e => new SeleniumWebElementAdapter(e))
-            .ToList();
-    }
+    }    
 
     public void WaitForPageToLoad(int timeoutInSeconds = 30)
     {
@@ -212,25 +177,38 @@ public class SeleniumWebDriverAdapter : IWebDriverAdapter
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(timeoutInSeconds));
         wait.Until(driver => ((IJavaScriptExecutor)driver).ExecuteScript("return document.readyState").Equals("complete"));
     }
-}
 
-public class SeleniumWebElementAdapter : IWebElementAdapter
-{
-    internal readonly SeleniumElement _element;
-    private readonly IWebDriver _driver;
-
-    public SeleniumWebElementAdapter(SeleniumElement element)
+    private bool IsElementInViewport(IWebElement element)
     {
-        _element = element;
+        var js = (IJavaScriptExecutor)_driver;
+        return (bool)js.ExecuteScript(@"
+            var rect = arguments[0].getBoundingClientRect();
+            return (
+                rect.top >= 0 &&
+                rect.left >= 0 &&
+                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+            );
+        ", element);
     }
 
-    public SeleniumWebElementAdapter(IWebElement element, IWebDriver driver)
+    private bool IsElementInteractable(IWebElement element)
     {
-        _element = element;
-        _driver = driver;
-    }
+        try
+        {
+            return element.Displayed && element.Enabled && IsElementInViewport(element);
+        }
+        catch (StaleElementReferenceException)
+        {
+            return false;
+        }
+    } 
 
-    public void SendKeys(string text) => _element.SendKeys(text);
-    public void Click() => _element.Click();
-    public string Text => _element.Text;
+    public void Dispose() => _driver.Quit();
+
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
+    }
 }

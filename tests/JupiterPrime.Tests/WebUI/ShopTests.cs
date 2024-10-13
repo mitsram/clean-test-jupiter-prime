@@ -29,8 +29,7 @@ namespace JupiterPrime.Tests
             await base.TearDown();
         }        
 
-        [Test]
-        [Ignore("This is how you skip a test")]
+        [Test]        
         public void AddItemToCart_ShouldIncreaseCartCount()
         {
             shop.NavigateToShopPage();
@@ -42,8 +41,7 @@ namespace JupiterPrime.Tests
             Assert.That(newCount, Is.EqualTo(initialCount + 1), "Cart count should increase by 1");
         }
 
-        [Test]
-        [Ignore("This is how you skip a test")]        
+        [Test]        
         public void RemoveItemFromCart_ShouldDecreaseCartCount()
         {
             shop.NavigateToShopPage();
@@ -56,8 +54,7 @@ namespace JupiterPrime.Tests
             Assert.That(newCount, Is.EqualTo(initialCount - 1), "Cart count should decrease by 1");
         }
 
-        [Test]
-        [Ignore("This is how you skip a test")]        
+        [Test]        
         public void IsItemInCart_ShouldReturnTrueForAddedItem()
         {
             shop.NavigateToShopPage();
@@ -82,8 +79,7 @@ namespace JupiterPrime.Tests
             Assert.That(shop.IsItemInCart("puppy"), Is.True, "puppy should be in the cart");
         }
 
-        [Test]
-        [Ignore("This is how you skip a test")]
+        [Test]        
         public void AddMultipleItemsToCart_ShouldUpdateCartCorrectly()
         {
             shop.NavigateToShopPage();

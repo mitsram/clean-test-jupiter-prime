@@ -192,30 +192,3 @@ public class PlaywrightWebDriverAdapter : IWebDriverAdapter
     }
 }
 
-public class PlaywrightWebElementAdapter : IWebElementAdapter
-{
-    internal readonly ILocator _element;
-
-    public PlaywrightWebElementAdapter(ILocator element)
-    {
-        _element = element ?? throw new ArgumentNullException(nameof(element));
-    }
-
-    public void SendKeys(string text) => _element.FillAsync(text).GetAwaiter().GetResult();
-    public void Click() => _element.ClickAsync().GetAwaiter().GetResult();
-    public string Text => _element.TextContentAsync().GetAwaiter().GetResult();
-}
-
-public class PlaywrightElementHandleAdapter : IWebElementAdapter
-{
-    internal readonly IElementHandle _element;
-
-    public PlaywrightElementHandleAdapter(IElementHandle element)
-    {
-        _element = element ?? throw new ArgumentNullException(nameof(element));
-    }
-
-    public void SendKeys(string text) => _element.FillAsync(text).GetAwaiter().GetResult();
-    public void Click() => _element.ClickAsync().GetAwaiter().GetResult();
-    public string Text => _element.TextContentAsync().GetAwaiter().GetResult();
-}

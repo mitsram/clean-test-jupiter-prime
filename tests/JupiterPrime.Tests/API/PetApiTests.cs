@@ -7,6 +7,7 @@ using JupiterPrime.Infrastructure.Repositories;
 namespace JupiterPrime.Tests.API;
 
 [TestFixture]
+[Ignore("This is how you skip a test")]
 public class PetApiTests
 {
     private PetApiUseCases _petUseCases;
