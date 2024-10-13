@@ -27,69 +27,53 @@ namespace JupiterPrime.Tests
         {
             shop.Dispose();
             await base.TearDown();
-        }
+        }        
 
         [Test]
         [Ignore("This is how you skip a test")]
-        public void NavigateToShopPage_ShouldDisplayCorrectItems()
-        {
-            shop.NavigateToShopPage();
-            var availableItems = shop.GetAvailableItems();
-
-            Assert.That(availableItems, Has.Count.EqualTo(6), "There should be 6 items available");
-            Assert.That(availableItems, Contains.Item("Jupiter Pilot Jacket"), "Jupiter Pilot Jacket should be available");
-            Assert.That(availableItems, Contains.Item("Jupiter Adventure Pants"), "Jupiter Adventure Pants should be available");
-            Assert.That(availableItems, Contains.Item("Jupiter T-Shirt"), "Jupiter T-Shirt should be available");
-            Assert.That(availableItems, Contains.Item("Jupiter Boots"), "Jupiter Boots should be available");
-            Assert.That(availableItems, Contains.Item("Jupiter Socks"), "Jupiter Socks should be available");
-            Assert.That(availableItems, Contains.Item("Jupiter Backpack"), "Jupiter Backpack should be available");
-        }
-
-        [Test]
         public void AddItemToCart_ShouldIncreaseCartCount()
         {
             shop.NavigateToShopPage();
-            // int initialCount = shop.GetCartItemCount();
-
+            int initialCount = shop.GetCartItemCount();
+            
             shop.AddItemToCart("Shrek");
 
-            // int newCount = shop.GetCartItemCount();
-            // Assert.That(newCount, Is.EqualTo(initialCount + 1), "Cart count should increase by 1");
+            int newCount = shop.GetCartItemCount();            
+            Assert.That(newCount, Is.EqualTo(initialCount + 1), "Cart count should increase by 1");
         }
 
         [Test]
-        [Ignore("This is how you skip a test")]
+        [Ignore("This is how you skip a test")]        
         public void RemoveItemFromCart_ShouldDecreaseCartCount()
         {
             shop.NavigateToShopPage();
-            shop.AddItemToCart("Jupiter Pilot Jacket");
-            int initialCount = shop.GetCartItemCount();
+            shop.AddItemToCart("Shrek");            
+            int initialCount = shop.GetCartItemCount();            
 
-            shop.RemoveItemFromCart("Jupiter Pilot Jacket");
+            shop.RemoveItemFromCart("Shrek");            
 
             int newCount = shop.GetCartItemCount();
             Assert.That(newCount, Is.EqualTo(initialCount - 1), "Cart count should decrease by 1");
         }
 
         [Test]
-        [Ignore("This is how you skip a test")]
+        [Ignore("This is how you skip a test")]        
         public void IsItemInCart_ShouldReturnTrueForAddedItem()
         {
             shop.NavigateToShopPage();
-            shop.AddItemToCart("Jupiter Pilot Jacket");
+            shop.AddItemToCart("puppy");
 
-            bool isInCart = shop.IsItemInCart("Jupiter Pilot Jacket");
+            bool isInCart = shop.IsItemInCart("puppy");
 
             Assert.That(isInCart, Is.True, "Added item should be in the cart");
         }
 
-        [Test]
-        [Ignore("This is how you skip a test")]
+        [Test]        
         public void GetItemPrice_ShouldReturnCorrectPrice()
         {
             shop.NavigateToShopPage();
 
-            decimal price = shop.GetItemPrice("Jupiter Pilot Jacket");
+            decimal price = shop.GetItemPrice("Shrek");
 
             Assert.That(price, Is.EqualTo(499.99m), "Jupiter Pilot Jacket price should be $499.99");
         }

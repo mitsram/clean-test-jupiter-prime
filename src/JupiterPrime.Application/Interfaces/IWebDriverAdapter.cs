@@ -22,4 +22,22 @@ public interface IWebDriverAdapter : IDisposable, IAsyncDisposable
     
     IWebElementAdapter FindElementByDataLocator(string dataLocator);
     IReadOnlyCollection<IWebElementAdapter> FindElementsByDataLocator(string dataLocator);
+
+    void WaitForTextToChange(IWebElementAdapter element, string oldText, int timeoutInSeconds = 10);
+    void WaitForElementToDisappear(IWebElementAdapter element, int timeoutInSeconds = 10);
+
+    IWebElementAdapter FindElementByXPath(IWebElementAdapter parentElement, string xpath);
+
+    IReadOnlyCollection<IWebElementAdapter> FindElementsByXPath(IWebElementAdapter parentElement, string xpath);
+
+    IWebElementAdapter FindElementByTitle(string title);
+    IWebElementAdapter FindElementByTitle(IWebElementAdapter parentElement, string title);
+
+    IReadOnlyCollection<IWebElementAdapter> FindChildElements(IWebElementAdapter parentElement, string selector);
+
+    void WaitForPageToLoad(int timeoutInSeconds = 30);
+
+    void WaitForElementToBeVisible(string selector, int timeoutInSeconds = 30);
+    void WaitForElementToBeHidden(string selector, int timeoutInSeconds = 30);
+    void WaitForNetworkIdle(int timeoutInSeconds = 30);
 }

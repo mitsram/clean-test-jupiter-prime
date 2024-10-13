@@ -8,7 +8,7 @@ namespace JupiterPrime.Application.Interfaces
     {
         void NavigateToShopPage();
         void AddItemToCart(string itemName);
-        void RemoveItemFromCart(string itemName);
+        void RemoveItemFromCart(string itemName, int quantityToRemove = 1);
         int GetCartItemCount();
         bool IsItemInCart(string itemName);
         void NavigateToCartPage();

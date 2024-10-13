@@ -27,14 +27,14 @@ public class ShopUseCases : IDisposable
 
     public void AddItemToCart(string itemName)
     {
-        Console.WriteLine("---> Use Cases");
         _shopService.AddItemToCart(itemName);
         
     }
 
-    public void RemoveItemFromCart(string itemName)
+    public void RemoveItemFromCart(string itemName, int quantityToRemove = 1)
     {
-        _shopService.RemoveItemFromCart(itemName);
+        _shopService.NavigateToCartPage();
+        _shopService.RemoveItemFromCart(itemName, quantityToRemove);
     }
 
     public int GetCartItemCount()
@@ -44,6 +44,7 @@ public class ShopUseCases : IDisposable
 
     public bool IsItemInCart(string itemName)
     {
+        NavigateToCartPage();
         return _shopService.IsItemInCart(itemName);
     }
 

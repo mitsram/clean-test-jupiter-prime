@@ -24,9 +24,8 @@ namespace JupiterPrime.Application.Services
 
         public void AddItemToCart(string itemName)
         {            
-            NavigateToShopPage();            
             var productElements = _driver.FindElementsByTestId("product");            
-            Console.WriteLine("---> Service Start " + productElements.Count);
+
             foreach (var productElement in productElements)
             {
                 var nameElement = _driver.FindElementByDataLocator(productElement, "product-title");                
@@ -40,10 +39,79 @@ namespace JupiterPrime.Application.Services
             throw new Exception($"Product '{itemName}' not found.");
         }
 
-        public void RemoveItemFromCart(string itemName)
+        public void RemoveItemFromCart(string itemName, int quantityToRemove = 1)
         {
-            var removeButton = _driver.FindElementByXPath($"//div[contains(@class, 'inventory_item_name') and text()='{itemName}']/ancestor::div[contains(@class, 'inventory_item')]//button[text()='Remove']");
-            removeButton.Click();
+            // TODO: Improvement for multiple items dispose
+            int remainingToRemove = quantityToRemove;
+            int maxAttempts = 3;
+            int attempt = 0;
+
+            while (remainingToRemove > 0 && attempt < maxAttempts)
+            {
+                try
+                {
+                    _driver.WaitForElementToBeVisible("#cart-items");
+                    var cartTable = _driver.FindElementById("cart-items");
+                    var cartRows = _driver.FindChildElements(cartTable, "tbody tr");
+                    Console.WriteLine($"Found {cartRows.Count} rows in the cart.");
+
+                    bool itemFound = false;
+
+                    foreach (var row in cartRows)
+                    {
+                        var cells = _driver.FindChildElements(row, "td");
+                        if (cells.Count < 3)
+                        {
+                            Console.WriteLine($"Row does not have enough cells. Found {cells.Count} cells.");
+                            continue;
+                        }
+                        var titleCell = cells.ElementAt(1);
+                        var quantityCell = cells.ElementAt(0);
+                        
+                        if (titleCell.Text.Trim() == itemName.Trim())
+                        {
+                            itemFound = true;
+                            int currentQuantity = int.Parse(quantityCell.Text);
+
+                            var removeButton = _driver.FindElementByDataLocator(row, "remove-from-cart-button");
+                            if (removeButton == null)
+                            {
+                                throw new Exception($"Remove button not found for {itemName}");
+                            }                        
+                            removeButton.Click();                            
+                            _driver.WaitForElementToDisappear(removeButton);
+
+                            // Wait for the cart count to update
+                            var cartCountElement = _driver.FindElementById("cart-count");
+                            _driver.WaitForTextToChange(cartCountElement, currentQuantity.ToString());
+
+                            remainingToRemove--;
+
+                            if (currentQuantity == 1 || remainingToRemove == 0)
+                            {
+                                Console.WriteLine($"Removed {quantityToRemove - remainingToRemove} {itemName} from cart.");
+                                return;
+                            }
+                            // Break the loop to re-fetch the updated cart rows
+                            break;
+                        }
+                    }
+                    if (!itemFound)
+                    {
+                        throw new Exception($"Product '{itemName}' not found in the cart.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Attempt {attempt + 1} failed: {ex.Message}");
+                    attempt++;
+                    if (attempt >= maxAttempts)
+                    {
+                        throw;
+                    }
+                    Task.Delay(1000).Wait(); // Wait for 1 second before retrying
+                }
+            }
         }
 
         public int GetCartItemCount()
@@ -55,9 +123,33 @@ namespace JupiterPrime.Application.Services
 
         public bool IsItemInCart(string itemName)
         {
-            NavigateToCartPage();
-            var cartItems = _driver.FindElementsByClassName("inventory_item_name");
-            return cartItems.Any(item => item.Text == itemName);
+            try
+            {
+                _driver.WaitForElementToBeVisible("#cart-items");
+                var cartTable = _driver.FindElementById("cart-items");
+                var cartRows = _driver.FindChildElements(cartTable, "tbody tr");
+                
+                foreach (var row in cartRows)
+                {
+                    var cells = _driver.FindChildElements(row, "td");
+                    if (cells.Count < 2) continue;
+                    
+                    var titleCell = cells.ElementAt(1);
+                    
+                    if (titleCell.Text.Trim().Equals(itemName.Trim(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking if item is in cart: {ex.Message}");
+                // Optionally, you can rethrow the exception if you want the test to fail
+                // throw;
+            }
+            
+            return false;
         }
 
         public void NavigateToCartPage()
