@@ -109,7 +109,7 @@ namespace JupiterPrime.Application.Services
                     {
                         throw;
                     }
-                    Task.Delay(1000).Wait(); // Wait for 1 second before retrying
+                    Task.Delay(2000).Wait(); // Wait for 1 second before retrying
                 }
             }
         }

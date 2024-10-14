@@ -18,19 +18,64 @@ public class PlaywrightWebDriverAdapter : IWebDriverAdapter
         _defaultTimeoutMs = 30 * 5000;
     }
 
+    public string GetCurrentUrl() => _page.Url;
+
     public void NavigateToUrl(string url) => _page.GotoAsync(url).GetAwaiter().GetResult();
 
     public IWebElementAdapter FindElementById(string id) => 
         new PlaywrightWebElementAdapter(_page.Locator($"#{id}"));
 
+    public IWebElementAdapter FindElementByClassName(string className) =>
+        new PlaywrightWebElementAdapter(_page.Locator($".{className}"));
+
     public IWebElementAdapter FindElementByTestId(string testId) =>
         new PlaywrightWebElementAdapter(_page.GetByTestId(testId));
+    
+    public IWebElementAdapter FindElementByTestId(IWebElementAdapter parentElement, string testId)
+    {
+        var playwrightElement = (parentElement as PlaywrightWebElementAdapter)._element;
+        return new PlaywrightWebElementAdapter(playwrightElement.Locator($"[data-testid='{testId}']"));
+    }
 
     public IWebElementAdapter FindElementByXPath(string xpath) =>
         new PlaywrightWebElementAdapter(_page.Locator(xpath));
 
-    public IWebElementAdapter FindElementByClassName(string className) =>
-        new PlaywrightWebElementAdapter(_page.Locator($".{className}"));
+    public IWebElementAdapter FindElementByXPath(IWebElementAdapter parentElement, string xpath)
+    {
+        var playwrightElement = (parentElement as PlaywrightWebElementAdapter)._element;
+        return new PlaywrightWebElementAdapter(playwrightElement.Locator(xpath));
+    }
+
+    public IWebElementAdapter FindElementByTitle(string title)
+    {
+        return new PlaywrightWebElementAdapter(_page.Locator($"[title='{title}']"));
+    }
+
+    public IWebElementAdapter FindElementByTitle(IWebElementAdapter parentElement, string title)
+    {
+        var playwrightElement = (parentElement as PlaywrightWebElementAdapter)._element;
+        return new PlaywrightWebElementAdapter(playwrightElement.Locator($"[title='{title}']"));
+    }
+
+    public IWebElementAdapter FindElementByDataLocator(string dataLocator)
+    {        
+        var elements = _page.Locator($"[data-locator='{dataLocator}']").AllAsync().GetAwaiter().GetResult();
+        var firstElement = elements.FirstOrDefault();
+        return firstElement != null ? new PlaywrightWebElementAdapter(_page.Locator($"[data-locator='{dataLocator}']")) : null;
+    }
+
+    public IWebElementAdapter FindElementByDataLocator(IWebElementAdapter parentElement, string dataLocator)
+    {
+        var playwrightElement = (parentElement as PlaywrightWebElementAdapter)._element;        
+        var elements = playwrightElement.Locator($"[data-locator='{dataLocator}']").AllAsync().GetAwaiter().GetResult();
+        var firstElement = elements.FirstOrDefault();
+        return firstElement != null ? new PlaywrightWebElementAdapter(firstElement) : null;
+    }
+
+    public IReadOnlyCollection<IWebElementAdapter> FindElementsByClassName(string className) =>
+        _page.QuerySelectorAllAsync($".{className}").GetAwaiter().GetResult()
+            .Select(e => new PlaywrightElementHandleAdapter(e))
+            .ToList();
 
     public IReadOnlyCollection<IWebElementAdapter> FindElementsByCssSelector(string cssSelector) =>
         _page.QuerySelectorAllAsync(cssSelector).GetAwaiter().GetResult()
@@ -42,32 +87,12 @@ public class PlaywrightWebDriverAdapter : IWebDriverAdapter
             .Select(e => new PlaywrightElementHandleAdapter(e))
             .ToList();
 
-    public IReadOnlyCollection<IWebElementAdapter> FindElementsByClassName(string className) =>
-        _page.QuerySelectorAllAsync($".{className}").GetAwaiter().GetResult()
-            .Select(e => new PlaywrightElementHandleAdapter(e))
-            .ToList();
-
-    public string GetCurrentUrl() => _page.Url;
-
-    public void Dispose() => _page.CloseAsync().GetAwaiter().GetResult();
-
-    public async ValueTask DisposeAsync() => await _page.CloseAsync();
-
-    public IWebElementAdapter FindElementByDataLocator(string dataLocator)
-    {
-        // return new PlaywrightWebElementAdapter(_page.Locator($"[data-locator='{dataLocator}']"));
-        var elements = _page.Locator($"[data-locator='{dataLocator}']").AllAsync().GetAwaiter().GetResult();
-        var firstElement = elements.FirstOrDefault();
-        return firstElement != null ? new PlaywrightWebElementAdapter(_page.Locator($"[data-locator='{dataLocator}']")) : null;
-    }
-
-    public IWebElementAdapter FindElementByDataLocator(IWebElementAdapter parentElement, string dataLocator)
+    public IReadOnlyCollection<IWebElementAdapter> FindElementsByXPath(IWebElementAdapter parentElement, string xpath)
     {
         var playwrightElement = (parentElement as PlaywrightWebElementAdapter)._element;
-        // return new PlaywrightWebElementAdapter(playwrightElement.Locator($"[data-locator='{dataLocator}']"));
-        var elements = playwrightElement.Locator($"[data-locator='{dataLocator}']").AllAsync().GetAwaiter().GetResult();
-        var firstElement = elements.FirstOrDefault();
-        return firstElement != null ? new PlaywrightWebElementAdapter(firstElement) : null;
+        return playwrightElement.Locator(xpath).AllAsync().GetAwaiter().GetResult()
+            .Select(e => new PlaywrightWebElementAdapter(playwrightElement.Locator(xpath).Filter(new() { Has = _page.Locator($":scope:has-text('{e.TextContentAsync().GetAwaiter().GetResult()}')")})))
+            .ToList();
     }
 
     public IReadOnlyCollection<IWebElementAdapter> FindElementsByTestId(string testId) 
@@ -82,18 +107,6 @@ public class PlaywrightWebDriverAdapter : IWebDriverAdapter
         return locator.AllAsync().GetAwaiter().GetResult()
             .Select(e => new PlaywrightWebElementAdapter(e))
             .ToList();
-    }
-        
-
-    // public IReadOnlyCollection<IWebElementAdapter> FindElementsByTestId(string testId) =>
-    //     _page.GetByTestId(testId).AllAsync().GetAwaiter().GetResult()
-    //         .Select(e => new PlaywrightWebElementAdapter(e))
-    //         .ToList();
-
-    public IWebElementAdapter FindElementByTestId(IWebElementAdapter parentElement, string testId)
-    {
-        var playwrightElement = (parentElement as PlaywrightWebElementAdapter)._element;
-        return new PlaywrightWebElementAdapter(playwrightElement.Locator($"[data-testid='{testId}']"));
     }
 
     public IReadOnlyCollection<IWebElementAdapter> FindElementsByDataLocator(string dataLocator)
@@ -127,31 +140,6 @@ public class PlaywrightWebDriverAdapter : IWebDriverAdapter
             State = WaitForSelectorState.Hidden,
             Timeout = timeoutInSeconds * 1000
         }).GetAwaiter().GetResult();
-    }    
-
-    public IWebElementAdapter FindElementByXPath(IWebElementAdapter parentElement, string xpath)
-    {
-        var playwrightElement = (parentElement as PlaywrightWebElementAdapter)._element;
-        return new PlaywrightWebElementAdapter(playwrightElement.Locator(xpath));
-    }
-
-    public IReadOnlyCollection<IWebElementAdapter> FindElementsByXPath(IWebElementAdapter parentElement, string xpath)
-    {
-        var playwrightElement = (parentElement as PlaywrightWebElementAdapter)._element;
-        return playwrightElement.Locator(xpath).AllAsync().GetAwaiter().GetResult()
-            .Select(e => new PlaywrightWebElementAdapter(playwrightElement.Locator(xpath).Filter(new() { Has = _page.Locator($":scope:has-text('{e.TextContentAsync().GetAwaiter().GetResult()}')")})))
-            .ToList();
-    }
-
-    public IWebElementAdapter FindElementByTitle(string title)
-    {
-        return new PlaywrightWebElementAdapter(_page.Locator($"[title='{title}']"));
-    }
-
-    public IWebElementAdapter FindElementByTitle(IWebElementAdapter parentElement, string title)
-    {
-        var playwrightElement = (parentElement as PlaywrightWebElementAdapter)._element;
-        return new PlaywrightWebElementAdapter(playwrightElement.Locator($"[title='{title}']"));
     }
 
     public IReadOnlyCollection<IWebElementAdapter> FindChildElements(IWebElementAdapter parentElement, string selector)
@@ -190,5 +178,9 @@ public class PlaywrightWebDriverAdapter : IWebDriverAdapter
     {
         _page.WaitForLoadStateAsync(LoadState.NetworkIdle, new() { Timeout = timeoutInSeconds * 1000 }).GetAwaiter().GetResult();
     }
+
+    public void Dispose() => _page.CloseAsync().GetAwaiter().GetResult();
+
+    public async ValueTask DisposeAsync() => await _page.CloseAsync();
 }
 

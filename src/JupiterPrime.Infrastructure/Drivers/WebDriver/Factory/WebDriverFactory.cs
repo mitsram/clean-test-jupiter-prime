@@ -1,78 +1,52 @@
-using JupiterPrime.Application.Interfaces;
-using JupiterPrime.Infrastructure.Drivers.WebDriver.Adapters;
-using Microsoft.Playwright;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
 using System;
 using System.Threading.Tasks;
+using JupiterPrime.Application.Enums;
+using JupiterPrime.Application.Interfaces;
+using JupiterPrime.Infrastructure.Drivers.WebDriver.Factory;
 
-namespace JupiterPrime.Infrastructure.Drivers.WebDriver;
-
-public class WebDriverFactory : IWebDriverFactory, IAsyncDisposable
+namespace JupiterPrime.Infrastructure.Drivers.WebDriver.Factory
 {
-    private readonly WebDriverType driverType;
-    private IWebDriverAdapter driverAdapter;
-    private IPlaywright playwright;
-    private IBrowser browser;
-
-    public WebDriverFactory(WebDriverType webDriverType)
+    public class WebDriverFactory : IWebDriverFactory, IAsyncDisposable
     {
-        driverType = webDriverType;
-    }
+        private readonly WebDriverType driverType;
+        private readonly BrowserType browserType;
+        private IWebDriverAdapter driverAdapter;
+        private IWebDriverAdapterFactory adapterFactory;
 
-    public async Task<IWebDriverAdapter> CreateWebDriver()
-    {
-        switch (driverType)
+        public WebDriverFactory(WebDriverType webDriverType, BrowserType browserType)
         {
-            case WebDriverType.Selenium:
-                driverAdapter = CreateSeleniumWebDriver();
-                return driverAdapter;
-            case WebDriverType.Playwright:
-                driverAdapter = await CreatePlaywrightWebDriver();
-                return driverAdapter;
-            default:
-                throw new ArgumentException("Invalid WebDriver type");
-        }
-    }
-
-    private IWebDriverAdapter CreateSeleniumWebDriver()
-    {
-        var options = new ChromeOptions();
-        // options.AddArgument("--headless");
-        var driver = new ChromeDriver(options);
-        return new SeleniumWebDriverAdapter(driver);
-    }
-
-    private async Task<IWebDriverAdapter> CreatePlaywrightWebDriver()
-    {
-        playwright = await Playwright.CreateAsync();
-        browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
-        {
-            Headless = false
-        });
-        var page = await browser.NewPageAsync();
-        return new PlaywrightWebDriverAdapter(page);
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (driverAdapter != null)
-        {
-            await driverAdapter.DisposeAsync();
+            driverType = webDriverType;
+            this.browserType = browserType;
+            adapterFactory = CreateAdapterFactory(webDriverType);
         }
 
-        if (browser != null)
+        private IWebDriverAdapterFactory CreateAdapterFactory(WebDriverType webDriverType)
         {
-            await browser.DisposeAsync();
+            return webDriverType switch
+            {
+                WebDriverType.Selenium => new SeleniumWebDriverFactory(),
+                WebDriverType.Playwright => new PlaywrightWebDriverFactory(),
+                _ => throw new ArgumentException("Invalid WebDriver type")
+            };
         }
 
-        playwright?.Dispose();
+        public async Task<IWebDriverAdapter> CreateWebDriver()
+        {
+            driverAdapter = await adapterFactory.CreateWebDriver(browserType);
+            return driverAdapter;
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (driverAdapter != null)
+            {
+                await driverAdapter.DisposeAsync();
+            }
+
+            if (adapterFactory is IAsyncDisposable disposableFactory)
+            {
+                await disposableFactory.DisposeAsync();
+            }
+        }
     }
 }
-
-public enum WebDriverType
-{
-    Selenium,
-    Playwright
-}
-

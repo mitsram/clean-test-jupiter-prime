@@ -86,12 +86,12 @@ namespace JupiterPrime.Tests
 
             shop.AddItemToCart("Shrek");
             shop.AddItemToCart("puppy");
-            shop.AddItemToCart("Panda");
+            shop.AddItemToCart("Uganda"); // Optimise element finding for Selenium
 
             Assert.That(shop.GetCartItemCount(), Is.EqualTo(3), "Cart should contain 3 items");
             Assert.That(shop.IsItemInCart("Shrek"), Is.True, "Shrek should be in the cart");
             Assert.That(shop.IsItemInCart("puppy"), Is.True, "puppy should be in the cart");
-            Assert.That(shop.IsItemInCart("Panda"), Is.True, "Panda should be in the cart");
+            Assert.That(shop.IsItemInCart("Uganda"), Is.True, "Panda should be in the cart");
         }        
 
         [Test]

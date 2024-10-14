@@ -1,5 +1,6 @@
 using JupiterPrime.Infrastructure.Configuration;
 using JupiterPrime.Infrastructure.Drivers.WebDriver;
+using JupiterPrime.Infrastructure.Drivers.WebDriver.Factory;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ namespace JupiterPrime.Tests
         [SetUp]
         public virtual async Task SetupAsync()
         {
-            webDriverFactory = new WebDriverFactory(TestConfig.WebDriverType);            
+            webDriverFactory = new WebDriverFactory(TestConfig.WebDriverType, TestConfig.BrowserType);            
         }
 
         [TearDown]
