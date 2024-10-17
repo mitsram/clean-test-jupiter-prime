@@ -1,4 +1,3 @@
-using JupiterPrime.Infrastructure.Drivers.WebDriver;
 using Microsoft.Extensions.Configuration;
 using JupiterPrime.Application.Enums;
 

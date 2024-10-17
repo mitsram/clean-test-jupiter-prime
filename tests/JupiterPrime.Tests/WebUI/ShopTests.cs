@@ -1,10 +1,5 @@
 using JupiterPrime.Application.Interfaces;
-using JupiterPrime.Application.Services;
 using JupiterPrime.Application.UseCases;
-using NUnit.Framework;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace JupiterPrime.Tests
 {

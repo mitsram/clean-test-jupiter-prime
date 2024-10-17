@@ -28,10 +28,12 @@ public class PetApiWithJsonSteps
     [Given(@"I have added a pet with the following details:")]
     public void GivenIHaveANewPetWithTheFollowingDetails(string petJson)
     {
-        _testPet = JsonSerializer.Deserialize<Pet>(petJson, new JsonSerializerOptions
+        var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
-        });
+        };
+
+        _testPet = JsonSerializer.Deserialize<Pet>(petJson, options);
     }
 
     [When(@"I add the pet to the store")]
@@ -85,7 +87,7 @@ public class PetApiWithJsonSteps
             PropertyNameCaseInsensitive = true
         });
         var addedPet = _scenarioContext.Get<Pet>("AddedPet");
-        addedPet.Status = updateData.Status;
+        addedPet.Status = updateData!.Status;
         var updatedPet = await _petUseCases.UpdatePetAsync(addedPet);
         _scenarioContext["UpdatedPet"] = updatedPet;
     }
