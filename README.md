@@ -62,8 +62,8 @@ dotnet test
 To run specific test projects:
 
 ```
-dotnet test tests/SauceDemo.Tests
-dotnet test tests/SauceDemo.Specflow
+dotnet test tests/JupiterPrime.Tests
+dotnet test tests/JupiterPrime.Specflow
 ```
 
 
@@ -153,7 +153,7 @@ Example Feature:
 
 ```gherkin
 Feature: Login
-    As a user of the Sauce Demo website
+    As a user of the JupiterPrime website
     I want to be able to log in
     So that I can access the inventory page
 
